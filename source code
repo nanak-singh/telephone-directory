@@ -1,0 +1,306 @@
+# include<fstream.h>
+#include<stdio.h>
+#include<string.h>
+#include<process.h>
+#include<ctype.h>
+#include<iostream.h>
+class telephone
+{
+int id;
+char name[30];
+char phone[15],address[30],alt_no[15];
+public:
+telephone();
+telephone(telephone &T);
+void indata();
+void outdata();
+int getid();
+char *getaddress();
+char *getname();
+char *getphone();
+char*getalt_no();
+};
+telephone::telephone()
+{
+id=0;
+name[0]='\0';
+address[0]='\0';
+phone[0]='\0';
+alt_no[0]='\0';
+}
+telephone::telephone(telephone &T)
+{
+id=T.id;
+strcpy(name,T.name);
+strcpy(address,T.address);
+strcpy(phone,T.phone);
+strcpy(alt_no,T.alt_no);
+}
+void telephone::indata()
+{
+cout<<"enter id\n";
+cin>>id;
+cout<<"enter name\n";
+gets(name);
+cout<<"enter address\n";
+gets(address);
+cout<<"enter phone no.\n";
+gets(phone);
+cout<<"enter alternate number\n";
+gets(alt_no);
+}
+void telephone::outdata()
+{
+cout<<"id is\n"<<id<<"name is\n";
+puts(name);
+cout<<"address is\n";puts(address);
+cout<<"phoen no is\n";puts(phone);
+cout<<"alternate number is\n";puts(alt_no);
+}
+int telephone::getid()
+{return(id);}
+char* telephone::getname()
+{return(name);}
+char* telephone::getaddress()
+{
+return(address);
+}
+char* telephone::getphone()
+{
+return(phone);
+}
+char* telephone::getalt_no()
+{
+return(alt_no);
+}
+void WRITE()
+{
+ofstream f("telephone.dat",ios::binary|ios::app);
+telephone t;
+char reply;
+do
+{
+t.indata();
+f.write((char*)&t,sizeof(t));
+cout<<"enter more records\n";
+cin>>reply;
+}while(toupper(reply)=='Y');
+f.close();
+}
+void READ()
+{
+ifstream f("telephone.dat",ios::binary|ios::in);
+telephone t;
+if(!f)
+{
+cout<<"file does not exist\n";
+return;
+}
+int ctr=0;
+while(f.read((char*)&t,sizeof(t)))
+{
+cout<<"\nrecord:"<<++ctr;
+t.outdata();
+}
+f.close();
+}
+void SEARCH_ID()
+{
+ifstream f("telephone.dat",ios::in|ios::binary);
+char found='N';
+if(!f)
+{
+cout<<"file reading error\n";
+return;
+}
+telephone t;
+int idno;
+cout<<"enter id to searched\n";
+cin>>idno;
+while(f.read((char*)&t,sizeof(t)))
+{
+if(t.getid()==idno)
+{
+cout<<"information is\n";
+t.outdata();
+found='Y';
+break;
+}
+}
+if(found=='N')
+cout<<"no such record found\n";
+f.close();
+}
+void SORT_ENO()
+{
+fstream f;
+f.open("telephone.dat",ios::binary|ios::in);
+telephone t[40];
+if(!f)
+{
+cout<<"file does not exist\n";
+return;
+}
+int n=0;
+while(f.read((char*)&t[n],sizeof(t)))
+{
+n++;
+telephone temp;
+int i,j;
+for(i=1;i<n;i++)
+for(j=1;j<n-i;j++)
+if(t[j].getid()>t[j+1].getid())
+{
+temp=t[j];
+t[j]=t[j+1];
+t[j+1]=temp;
+}
+}
+f.close();
+f.open("telephone.dat",ios::out|ios::binary);
+int i=0;
+while(i<n)
+{
+f.write((char*)&t[i],sizeof(t));
+++i;
+}
+cout<<"file sorted\n";
+f.close();
+}
+void SEARCH_NAME()
+{
+ifstream f("telephone.dat",ios::in|ios::binary);
+char found='N';
+if(!f)
+{
+cout<<"file reading error\n";
+return;
+}
+telephone t;
+char namee[30];
+cout<<"enter name to be searched\n";
+gets(namee);
+while(f.read((char*)&t,sizeof(t)))
+{
+if((strcmp(t.getname(),namee))==0)
+{
+t.outdata();
+found='Y';
+}
+}
+if(found=='N')
+cout<<"no record found with such name\n";
+f.close();
+}
+void insertion()
+{
+ifstream fmain("telephone.dat",ios::binary|ios::in);
+ofstream ftemp("temp.dat",ios::binary|ios::out);
+telephone t,tnew;
+cout<<"enter new record information\n";
+tnew.indata();
+char EOF_FLAG='Y';
+while(fmain.read((char*)&t,sizeof(t)))
+{
+if(t.getid()<=tnew.getid())
+ftemp.write((char*)&t,sizeof(t));
+else
+{
+ftemp.write((char*)&tnew,sizeof(tnew));
+EOF_FLAG='N';
+break;
+}
+}
+if(EOF_FLAG=='Y')
+ftemp.write((char*)&tnew,sizeof(tnew));
+else
+while(!fmain.eof())
+{
+ftemp.write((char*)&t,sizeof(t));
+fmain.read((char*)&t,sizeof(t));
+}
+fmain.close();
+ftemp.close();
+remove("telephone.dat");
+rename("temp.dat","telephone.dat");
+}
+void MODIFY()
+{
+fstream f("telephone.dat",ios::in|ios::out|ios::binary);
+telephone t;
+int idno;
+char found;
+cout<<"enter id whose record is to be modified\n";
+cin>>idno;
+int rec_count=0;
+while(f.read((char*)&t,sizeof(t)))
+{
+if(t.getid()==idno)
+{
+cout<<"enter new information\n";
+t.indata();
+f.seekg(rec_count*sizeof(t),ios::beg);
+f.write((char*)&t,sizeof(t));
+found='Y';
+break;
+}
+rec_count++;
+}
+if(found=='Y')
+cout<<"record updated\n";
+else
+cout<<"\n record not found\n";
+f.close();
+}
+void deletion()
+{
+ifstream fmain("emp.dat",ios::binary|ios::in);
+ofstream ftemp("temp.dat",ios::binary|ios::out);
+telephone t;
+int idno;
+cout<<"enter id whose contact is to be deleted\n";
+cin>>idno;
+char found='Y';
+while(fmain.read((char*)&t,sizeof(t)))
+{
+if(t.getid()!=idno)
+ftemp.write((char*)&t,sizeof(t));
+else
+found='Y';
+}
+if(found=='N')
+cout<<"record not found\n";
+fmain.close();
+ftemp.close();
+remove("telephone.dat");
+rename("temp.dat","telephone.dat");
+}
+void main()
+{
+int ch;
+do
+{
+cout<<"\n\n\nfile operation menu\n";
+cout<<"1-to create or append file\n2-to display all records\n3-display record of a particular id\n4-display record for a name\n";
+cout<<"5-insertion of new record in order of id\n6-deletion of a record of an id\n7-modification of record of an id\n 8-to exit\n";
+cin>>ch;
+switch(ch)
+{
+case 1:WRITE();break;
+case 2:READ();break;
+case 3:SEARCH_ID();break;
+case 4:SEARCH_NAME();break;
+case 5:SORT_ENO();insertion();break;
+case 6:deletion();break;
+case 7:MODIFY();break;
+case 8:exit(0);
+}
+}while(1);
+}
+
+
+
+
+
+
+
